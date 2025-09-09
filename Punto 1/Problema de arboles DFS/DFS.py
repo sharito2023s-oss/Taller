@@ -1,35 +1,34 @@
-import heapq
-
-def ucs(grafo, inicio, meta):
-    cola = [(0, inicio)]  # (costo, nodo)
+def dfs_correcto(grafo, inicio, meta):
+    pila = [inicio]  # Usar LISTA como PILA
     visitados = set()
-    costo_acumulado = {inicio: 0}
-    padre = {inicio: None}
+    padre = {inicio: None}  # Mejor usar None para el nodo inicial
     
-    while cola:
-        costo, nodo = heapq.heappop(cola)
-        if nodo in visitados:
-            continue
-        visitados.add(nodo)
+    while pila:
+        nodo = pila.pop()  # Último en entrar, primero en salir (LIFO)
+        
         if nodo == meta:
             break
-        for vecino, costo_arista in grafo[nodo]:
-            nuevo_costo = costo + costo_arista
-            if vecino not in costo_acumulado or nuevo_costo < costo_acumulado[vecino]:
-                costo_acumulado[vecino] = nuevo_costo
-                heapq.heappush(cola, (nuevo_costo, vecino))
-                padre[vecino] = nodo
+            
+        if nodo not in visitados:
+            visitados.add(nodo)
+            # Explorar vecinos en orden natural (no inverso)
+            for vecino, _ in grafo[nodo]:
+                if vecino not in visitados:
+                    pila.append(vecino)
+                    if vecino not in padre:  # Evitar sobrescribir padres
+                        padre[vecino] = nodo
     
-    # Reconstruir el camino
-    def reconstruir_camino(padre, meta):
-        camino = []
-        actual = meta
-        while actual is not None:
-            camino.append(actual)
-            actual = padre.get(actual)
-        return camino[::-1]  # Invertir el camino
+    # Reconstruir camino
+    camino = []
+    actual = meta
+    while actual is not None:
+        camino.append(actual)
+        actual = padre.get(actual)
     
-    return reconstruir_camino(padre, meta), costo_acumulado.get(meta, float('inf'))
+    # Calcular costo total (suma de costos unitarios)
+    costo = len(camino) - 1 if camino and camino[0] == inicio else 0
+    
+    return camino[::-1], costo
 
 # Grafo con costos (costos unitarios)
 grafo_costo = {
@@ -67,5 +66,5 @@ grafo_costo = {
     'FF': []
 }
 
-camino, costo = ucs(grafo_costo, 'S', 'W')
-print("UCS - Camino:", camino, "Costo:", costo)
+camino, costo = dfs_correcto(grafo_costo, 'S', 'W')
+print("DFS - Camino:", camino, "Costo:", costo)
